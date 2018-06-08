@@ -64,6 +64,10 @@ extern "C" EXPORT int Tclespeak_Init(Tcl_Interp *interp);
 
 int SetRate(ClientData, Tcl_Interp *, int, Tcl_Obj *CONST[]);
 int GetRate(ClientData, Tcl_Interp *, int, Tcl_Obj *CONST[]);
+int SetPitch(ClientData, Tcl_Interp *, int, Tcl_Obj *CONST[]);
+int GetPitch(ClientData, Tcl_Interp *, int, Tcl_Obj *CONST[]);
+int SetPitchRange(ClientData, Tcl_Interp *, int, Tcl_Obj *CONST[]);
+int GetPitchRange(ClientData, Tcl_Interp *, int, Tcl_Obj *CONST[]);
 int getTTSVersion(ClientData, Tcl_Interp *, int, Tcl_Obj *CONST[]);
 int Punct(ClientData, Tcl_Interp *, int, Tcl_Obj *CONST[]);
 int Caps(ClientData, Tcl_Interp *, int, Tcl_Obj *CONST[]);
@@ -103,6 +107,14 @@ espeak_Initialize(AUDIO_OUTPUT_PLAYBACK, 512, NULL, 0);
   Tcl_CreateObjCommand(interp, "setRate", SetRate, (ClientData)handle,
                        TclEspeakFree);
   Tcl_CreateObjCommand(interp, "getRate", GetRate, (ClientData)handle,
+                       TclEspeakFree);
+  Tcl_CreateObjCommand(interp, "setPitch", SetPitch, (ClientData)handle,
+                       TclEspeakFree);
+  Tcl_CreateObjCommand(interp, "getPitch", GetPitch, (ClientData)handle,
+                       TclEspeakFree);
+  Tcl_CreateObjCommand(interp, "setPitchRange", SetPitchRange, (ClientData)handle,
+                       TclEspeakFree);
+  Tcl_CreateObjCommand(interp, "getPitchRange", GetPitchRange, (ClientData)handle,
                        TclEspeakFree);
   Tcl_CreateObjCommand(interp, "ttsVersion", getTTSVersion, (ClientData)handle,
                        TclEspeakFree);
@@ -161,6 +173,82 @@ int SetRate(ClientData handle, Tcl_Interp *interp, int objc,
   if (rate != current_rate) {
     success = (espeak_SetParameter(espeakRATE, rate, 0) == EE_OK);
     if (success) current_rate = rate;
+  }
+  return success ? TCL_OK : TCL_ERROR;
+}
+
+int GetPitch(ClientData handle, Tcl_Interp *interp, int objc,
+            Tcl_Obj *CONST objv[]) {
+  int rc, pitch, voice;
+  if (objc != 2) {
+    Tcl_AppendResult(interp, "Usage: getPitch voiceCode  ", TCL_STATIC);
+    return TCL_ERROR;
+  }
+  rc = Tcl_GetIntFromObj(interp, objv[1], &voice);
+  if (rc != TCL_OK) return rc;
+
+  pitch = espeak_GetParameter(espeakPITCH, 1);
+
+  Tcl_SetObjResult(interp, Tcl_NewIntObj(pitch));
+  return TCL_OK;
+}
+
+int SetPitch(ClientData handle, Tcl_Interp *interp, int objc,
+            Tcl_Obj *CONST objv[]) {
+  static int current_pitch = -1;
+  int rc, pitch, voice;
+  int success = 1;
+  if (objc != 3) {
+    Tcl_AppendResult(interp, "Usage: setPitch voiceCode speechPitch ",
+                     TCL_STATIC);
+    return TCL_ERROR;
+  }
+  rc = Tcl_GetIntFromObj(interp, objv[1], &voice);
+  if (rc != TCL_OK) return rc;
+  rc = Tcl_GetIntFromObj(interp, objv[2], &pitch);
+  if (rc != TCL_OK) return rc;
+
+  if (pitch != current_pitch) {
+    success = (espeak_SetParameter(espeakPITCH, pitch, 0) == EE_OK);
+    if (success) current_pitch = pitch;
+  }
+  return success ? TCL_OK : TCL_ERROR;
+}
+
+int GetPitchRange(ClientData handle, Tcl_Interp *interp, int objc,
+            Tcl_Obj *CONST objv[]) {
+  int rc, pitch_range, voice;
+  if (objc != 2) {
+    Tcl_AppendResult(interp, "Usage: getPitchRange voiceCode  ", TCL_STATIC);
+    return TCL_ERROR;
+  }
+  rc = Tcl_GetIntFromObj(interp, objv[1], &voice);
+  if (rc != TCL_OK) return rc;
+
+  pitch_range = espeak_GetParameter(espeakRANGE, 1);
+
+  Tcl_SetObjResult(interp, Tcl_NewIntObj(pitch_range));
+  return TCL_OK;
+}
+
+int SetPitchRange(ClientData handle, Tcl_Interp *interp, int objc,
+            Tcl_Obj *CONST objv[]) {
+  static int current_pitch_range = -1;
+  int rc, pitch_range, voice;
+  int success = 1;
+  if (objc != 3) {
+    Tcl_AppendResult(interp, "Usage: setPitchRange voiceCode speechPitchRange ",
+                     TCL_STATIC);
+    return TCL_ERROR;
+  }
+  rc = Tcl_GetIntFromObj(interp, objv[1], &voice);
+  if (rc != TCL_OK) return rc;
+  rc = Tcl_GetIntFromObj(interp, objv[2], &pitch_range);
+  if (rc != TCL_OK) return rc;
+
+  if (pitch_range != current_pitch_range) {
+    success = (espeak_SetParameter(espeakRANGE, pitch_range, 0) == EE_OK);
+    if (success) current_pitch_range = pitch_range;
   }
   return success ? TCL_OK : TCL_ERROR;
 }
