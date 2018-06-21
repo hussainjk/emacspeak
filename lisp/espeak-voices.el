@@ -57,6 +57,27 @@
                       (string-match "espeak$" (getenv "DTK_PROGRAM")))
              (setq-default dt-speech-rate val))))
 
+(defcustom espeak-default-speech-pitch 50
+  "Default speech pitch for eSpeak."
+  :group 'tts
+  :type 'integer
+  :set #'(lambda(sym val)
+           (set-default sym val)
+           (when (and (getenv "DTK_PROGRAM")
+                      (string-match "espeak$" (getenv "DTK_PROGRAM")))
+             (setq-default espeak-speech-pitch val))))
+
+(defcustom espeak-default-speech-pitch-range 50
+  "Default speech pitch range for eSpeak."
+  :group 'tts
+  :type 'integer
+  :set #'(lambda(sym val)
+           (set-default sym val)
+           (when (and (getenv "DTK_PROGRAM")
+                      (string-match "espeak$" (getenv "DTK_PROGRAM")))
+             (setq-default espeak-speech-pitch-range val))))
+
+;;}}}
 ;;{{{ espeak-specific controls
 ;; Functions to interface with the Espeak server and interactively set pitch and pitch-range,
 ;; which are defined here instead of dtk-speech.el because they are exclusive to Espeak.
@@ -561,6 +582,8 @@ and TABLE gives the values along that dimension."
   "Configure TTS environment to use eSpeak."
   (cl-declare (special tts-default-speech-rate
                        espeak-default-speech-rate
+                       espeak-default-speech-pitch
+                       espeak-default-speech-pitch-range
                        dtk-speaker-process
                        emacspeak-unspeakable-rule))
   (fset 'tts-list-voices'espeak-list-voices)
@@ -571,6 +594,8 @@ and TABLE gives the values along that dimension."
   (setq tts-default-voice nil)
   (setq tts-default-speech-rate espeak-default-speech-rate)
   (set-default 'tts-default-speech-rate espeak-default-speech-rate)
+  (espeak-set-pitch espeak-default-speech-pitch t)
+  (espeak-set-pitch-range espeak-default-speech-pitch-range t)
   (espeak-setup-character-to-speech-table)
   (dtk-unicode-update-untouched-charsets '(ascii latin-iso8859-1)))
 
@@ -579,10 +604,12 @@ and TABLE gives the values along that dimension."
 ;;;###autoload
 (defun espeak-make-tts-env  ()
   "Constructs a TTS environment for Espeak."
-  (cl-declare (special espeak-default-speech-rate))
+  (cl-declare (special espeak-default-speech-rate espeak-default-speech-pitch espeak-default-speech-pitch-range))
   (make-tts-env
    :name :espeak :default-voice 'paul
    :default-speech-rate espeak-default-speech-rate
+   :default-speech-pitch espeak-default-speech-pitch
+   :default-speech-pitch-range espeak-default-speech-pitch-range
    :list-voices #'espeak-list-voices
    :acss-voice-defined-p #'espeak-voice-defined-p
    :get-acss-voice-command #'espeak-get-voice-command
