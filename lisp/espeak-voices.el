@@ -57,6 +57,82 @@
                       (string-match "espeak$" (getenv "DTK_PROGRAM")))
              (setq-default dt-speech-rate val))))
 
+;;{{{ espeak-specific controls
+;; Functions to interface with the Espeak server and interactively set pitch and pitch-range,
+;; which are defined here instead of dtk-speech.el because they are exclusive to Espeak.
+
+;;{{{  espeak pitch
+(defun espeak-interp-set-pitch (pitch)
+  (cl-declare (special dtk-speaker-process))
+  (process-send-string dtk-speaker-process
+                       (format "tts_set_speech_pitch %s\n"
+                               pitch)))
+
+;;;###autoload
+(defun espeak-set-pitch (pitch    &optional prefix)
+  "Set speaking PITCH for espeak.
+Interactive PREFIX arg means set   the global default value, and then set the
+current local  value to the result."
+  (interactive
+   (list
+    (read-from-minibuffer "Enter new pitch: ")
+    current-prefix-arg))
+  (cl-declare (special espeak-speech-pitch dtk-speaker-process
+                    espeak-default-speech-pitch
+                    dtk-program dtk-speak-server-initialized))
+  (when dtk-speak-server-initialized
+    (cond
+     (prefix
+      (unless (eq dtk-speaker-process (dtk-notify-process))
+        (let ((dtk-speaker-process (dtk-notify-process)))
+          (espeak-set-pitch pitch)))
+      (setq espeak-default-speech-pitch pitch)
+      (setq-default espeak-speech-pitch pitch)
+      (setq espeak-speech-pitch pitch))
+     (t (setq espeak-speech-pitch pitch)))
+    (espeak-interp-set-pitch pitch)
+    (when (called-interactively-p 'interactive)
+      (message "Set speech pitch to %s %s"
+               pitch
+               (if prefix "" "locally")))))
+
+;;}}}
+;;{{{  espeak pitch-range
+(defun espeak-interp-set-pitch-range (pitch-range)
+  (cl-declare (special dtk-speaker-process))
+  (process-send-string dtk-speaker-process
+                       (format "tts_set_speech_pitch_range %s\n"
+                               pitch-range)))
+
+;;;###autoload
+(defun espeak-set-pitch-range (pitch-range    &optional prefix)
+  "Set speaking PITCH for espeak.
+Interactive PREFIX arg means set   the global default value, and then set the
+current local  value to the result."
+  (interactive
+   (list
+    (read-from-minibuffer "Enter new pitch-range: ")
+    current-prefix-arg))
+  (cl-declare (special espeak-speech-pitch-range dtk-speaker-process
+                    espeak-default-speech-pitch-range
+                    dtk-program dtk-speak-server-initialized))
+  (when dtk-speak-server-initialized
+    (cond
+     (prefix
+      (unless (eq dtk-speaker-process (dtk-notify-process))
+        (let ((dtk-speaker-process (dtk-notify-process)))
+          (espeak-set-pitch-range pitch-range)))
+      (setq espeak-default-speech-pitch-range pitch-range)
+      (setq-default espeak-speech-pitch-range pitch-range)
+      (setq espeak-speech-pitch-range pitch-range))
+     (t (setq espeak-speech-pitch-range pitch-range)))
+    (espeak-interp-set-pitch-range pitch-range)
+    (when (called-interactively-p 'interactive)
+      (message "Set speech pitch-range to %s %s"
+               pitch-range
+               (if prefix "" "locally")))))
+
+;;}}}
 ;;}}}
 ;;{{{ Top-Level TTS Call
 
