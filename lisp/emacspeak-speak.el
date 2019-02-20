@@ -682,6 +682,46 @@ results in the Dectalk producing a tone whose length is a function of the
 line's indentation.  Specifying `speak'
 results in the number of initial spaces being spoken.")
 
+(defcustom emacspeak-audio-indentation-before "indent "
+  "Option specifying the phrase that is spoken before the indent level, when speaking line indentation."
+  :group 'emacspeak-speak
+  :type 'string)
+
+(defcustom emacspeak-audio-indentation-after ""
+  "Option specifying the phrase that is spoken after the indent level, when speaking line indentation."
+  :group 'emacspeak-speak
+  :type 'string)
+
+(defcustom emacspeak-audio-indentation-tab-grouped nil
+  "Option indicating whether indentation levels should be grouped into a multiple of the tab-width and an offset, when speaking line indentation."
+  :group 'emacspeak-speak
+  :type 'boolean)
+
+(defcustom emacspeak-audio-indentation-before-tab ""
+  "Option specifying the phrase that is spoken before the tab-width multiple, when speaking tab-grouped line indentation."
+  :group 'emacspeak-speak
+  :type 'string)
+
+(defcustom emacspeak-audio-indentation-after-tab " tabs"
+  "Option specifying the phrase that is spoken after the tab-width multiple, when speaking tab-grouped line indentation."
+  :group 'emacspeak-speak
+  :type 'string)
+
+(defcustom emacspeak-audio-indentation-tab-grouped-separator " "
+  "Option specifying the phrase that is spoken between the tab-width multiple and the tab-width offset, when speaking tab-grouped line indentation."
+  :group 'emacspeak-speak
+  :type 'string)
+
+(defcustom emacspeak-audio-indentation-before-offset ""
+  "Option specifying the phrase that is spoken before the tab-width offset, when speaking tab-grouped line indentation."
+  :group 'emacspeak-speak
+  :type 'string)
+
+(defcustom emacspeak-audio-indentation-after-offset " spaces"
+  "Option specifying the phrase that is spoken after the tab-width offset, when speaking tab-grouped line indentation."
+  :group 'emacspeak-speak
+  :type 'string)
+
 ;;}}}
 ;;{{{ filtering columns
 
@@ -1009,7 +1049,19 @@ with auditory icon `more'.  These can then be spoken using command
           (when
               (and (null arg) indent (> indent 0)
                    (eq 'speak emacspeak-audio-indentation-method))
-            (setq indent (format "indent %d" indent))
+            (setq indent
+              (cond
+                ((not emacspeak-audio-indentation-tab-grouped)
+                  (format "%s%d%s" emacspeak-audio-indentation-before indent emacspeak-audio-indentation-after))
+                ((< indent tab-width)
+                  (format "%s%d%s" emacspeak-audio-indentation-before-offset indent emacspeak-audio-indentation-after-offset))
+                ((eq 0 (% indent tab-width))
+                  (format "%s%d%s" emacspeak-audio-indentation-before-tab (/ indent tab-width) emacspeak-audio-indentation-after-tab))
+                (
+                  (format "%s%d%s%s%s%d%s"
+                    emacspeak-audio-indentation-before-tab (/ indent tab-width) emacspeak-audio-indentation-after-tab
+                    emacspeak-audio-indentation-tab-grouped-separator
+                    emacspeak-audio-indentation-before-offset (% indent tab-width) emacspeak-audio-indentation-after-offset))))
             (setq indent (propertize indent 'personality voice-indent))
             (setq line (concat indent line)))
           (when linenum
