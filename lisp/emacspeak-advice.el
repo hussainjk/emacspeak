@@ -217,7 +217,7 @@ beginning or end of a physical line produces an appropriate auditory icon."
  for f in
  '(
    next-logical-line previous-logical-line
-   delete-indentation back-to-indentation
+   delete-indentation
    lisp-indent-line goto-line)
  do
  (eval
@@ -2272,7 +2272,7 @@ Produce an auditory icon if possible."
 (cl-loop
  for f in
  '(beginning-of-line end-of-line
-                     move-beginning-of-line move-end-of-line)
+                     move-beginning-of-line move-end-of-line back-to-indentation)
  do
  (eval
   `(defadvice ,f (after emacspeak pre act comp)
