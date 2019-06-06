@@ -1933,7 +1933,7 @@ the newly created  line."
         (emacspeak-line-echo (emacspeak-speak-line))
         (t
          ad-do-it
-         (dtk-tone 225 75 'force)
+         (when emacspeak-use-auditory-icons (dtk-tone 225 75 'force))
          (emacspeak-speak-line))))
       (t ad-do-it))
      ad-return-value)))

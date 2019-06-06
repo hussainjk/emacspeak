@@ -226,7 +226,7 @@ has higher precedence than `face'."
 
 (defun dtk-tone-deletion ()
   "Tone used to indicate deletion."
-  (dtk-tone 500 75 'force))
+  (when emacspeak-use-auditory-icons (dtk-tone 500 75 'force)))
 
 (defun dtk-tone-upcase ()
   "Tone used to indicate changing to upcase."
