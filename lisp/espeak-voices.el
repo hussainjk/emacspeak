@@ -57,6 +57,103 @@
                       (string-match "espeak$" (getenv "DTK_PROGRAM")))
              (setq-default dt-speech-rate val))))
 
+(defcustom espeak-default-speech-pitch 50
+  "Default speech pitch for eSpeak."
+  :group 'tts
+  :type 'integer
+  :set #'(lambda(sym val)
+           (set-default sym val)
+           (when (and (getenv "DTK_PROGRAM")
+                      (string-match "espeak$" (getenv "DTK_PROGRAM")))
+             (setq-default espeak-speech-pitch val))))
+
+(defcustom espeak-default-speech-pitch-range 50
+  "Default speech pitch range for eSpeak."
+  :group 'tts
+  :type 'integer
+  :set #'(lambda(sym val)
+           (set-default sym val)
+           (when (and (getenv "DTK_PROGRAM")
+                      (string-match "espeak$" (getenv "DTK_PROGRAM")))
+             (setq-default espeak-speech-pitch-range val))))
+
+;;}}}
+;;{{{ espeak-specific controls
+;; Functions to interface with the Espeak server and interactively set pitch and pitch-range,
+;; which are defined here instead of dtk-speech.el because they are exclusive to Espeak.
+
+;;{{{  espeak pitch
+(defun espeak-interp-set-pitch (pitch)
+  (cl-declare (special dtk-speaker-process))
+  (process-send-string dtk-speaker-process
+                       (format "tts_set_speech_pitch %s\n"
+                               pitch)))
+
+;;;###autoload
+(defun espeak-set-pitch (pitch    &optional prefix)
+  "Set speaking PITCH for espeak.
+Interactive PREFIX arg means set   the global default value, and then set the
+current local  value to the result."
+  (interactive
+   (list
+    (read-from-minibuffer "Enter new pitch: ")
+    current-prefix-arg))
+  (cl-declare (special espeak-speech-pitch dtk-speaker-process
+                    espeak-default-speech-pitch
+                    dtk-program dtk-speak-server-initialized))
+  (when dtk-speak-server-initialized
+    (cond
+     (prefix
+      (unless (eq dtk-speaker-process (dtk-notify-process))
+        (let ((dtk-speaker-process (dtk-notify-process)))
+          (espeak-set-pitch pitch)))
+      (setq espeak-default-speech-pitch pitch)
+      (setq-default espeak-speech-pitch pitch)
+      (setq espeak-speech-pitch pitch))
+     (t (setq espeak-speech-pitch pitch)))
+    (espeak-interp-set-pitch pitch)
+    (when (called-interactively-p 'interactive)
+      (message "Set speech pitch to %s %s"
+               pitch
+               (if prefix "" "locally")))))
+
+;;}}}
+;;{{{  espeak pitch-range
+(defun espeak-interp-set-pitch-range (pitch-range)
+  (cl-declare (special dtk-speaker-process))
+  (process-send-string dtk-speaker-process
+                       (format "tts_set_speech_pitch_range %s\n"
+                               pitch-range)))
+
+;;;###autoload
+(defun espeak-set-pitch-range (pitch-range    &optional prefix)
+  "Set speaking PITCH for espeak.
+Interactive PREFIX arg means set   the global default value, and then set the
+current local  value to the result."
+  (interactive
+   (list
+    (read-from-minibuffer "Enter new pitch-range: ")
+    current-prefix-arg))
+  (cl-declare (special espeak-speech-pitch-range dtk-speaker-process
+                    espeak-default-speech-pitch-range
+                    dtk-program dtk-speak-server-initialized))
+  (when dtk-speak-server-initialized
+    (cond
+     (prefix
+      (unless (eq dtk-speaker-process (dtk-notify-process))
+        (let ((dtk-speaker-process (dtk-notify-process)))
+          (espeak-set-pitch-range pitch-range)))
+      (setq espeak-default-speech-pitch-range pitch-range)
+      (setq-default espeak-speech-pitch-range pitch-range)
+      (setq espeak-speech-pitch-range pitch-range))
+     (t (setq espeak-speech-pitch-range pitch-range)))
+    (espeak-interp-set-pitch-range pitch-range)
+    (when (called-interactively-p 'interactive)
+      (message "Set speech pitch-range to %s %s"
+               pitch-range
+               (if prefix "" "locally")))))
+
+;;}}}
 ;;}}}
 ;;{{{ Top-Level TTS Call
 
@@ -485,6 +582,8 @@ and TABLE gives the values along that dimension."
   "Configure TTS environment to use eSpeak."
   (cl-declare (special tts-default-speech-rate
                        espeak-default-speech-rate
+                       espeak-default-speech-pitch
+                       espeak-default-speech-pitch-range
                        dtk-speaker-process
                        emacspeak-unspeakable-rule))
   (fset 'tts-list-voices'espeak-list-voices)
@@ -495,6 +594,8 @@ and TABLE gives the values along that dimension."
   (setq tts-default-voice nil)
   (setq tts-default-speech-rate espeak-default-speech-rate)
   (set-default 'tts-default-speech-rate espeak-default-speech-rate)
+  (espeak-set-pitch espeak-default-speech-pitch t)
+  (espeak-set-pitch-range espeak-default-speech-pitch-range t)
   (espeak-setup-character-to-speech-table)
   (dtk-unicode-update-untouched-charsets '(ascii latin-iso8859-1)))
 
@@ -503,10 +604,12 @@ and TABLE gives the values along that dimension."
 ;;;###autoload
 (defun espeak-make-tts-env  ()
   "Constructs a TTS environment for Espeak."
-  (cl-declare (special espeak-default-speech-rate))
+  (cl-declare (special espeak-default-speech-rate espeak-default-speech-pitch espeak-default-speech-pitch-range))
   (make-tts-env
    :name :espeak :default-voice 'paul
    :default-speech-rate espeak-default-speech-rate
+   :default-speech-pitch espeak-default-speech-pitch
+   :default-speech-pitch-range espeak-default-speech-pitch-range
    :list-voices #'espeak-list-voices
    :acss-voice-defined-p #'espeak-voice-defined-p
    :get-acss-voice-command #'espeak-get-voice-command

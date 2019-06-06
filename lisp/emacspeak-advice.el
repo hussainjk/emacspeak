@@ -217,7 +217,7 @@ beginning or end of a physical line produces an appropriate auditory icon."
  for f in
  '(
    next-logical-line previous-logical-line
-   delete-indentation back-to-indentation
+   delete-indentation
    lisp-indent-line goto-line)
  do
  (eval
@@ -1933,7 +1933,7 @@ the newly created  line."
         (emacspeak-line-echo (emacspeak-speak-line))
         (t
          ad-do-it
-         (dtk-tone 225 75 'force)
+         (when emacspeak-use-auditory-icons (dtk-tone 225 75 'force))
          (emacspeak-speak-line))))
       (t ad-do-it))
      ad-return-value)))
@@ -2248,9 +2248,7 @@ Produce an auditory icon if possible."
 
 (cl-loop
  for f in
- '(beginning-of-line end-of-line
-                     move-beginning-of-line move-end-of-line
-                     recenter-top-bottom recenter)
+ '(recenter-top-bottom recenter)
  do
  (eval
   `(defadvice ,f (before emacspeak pre act comp)
@@ -2260,6 +2258,34 @@ Produce an auditory icon if possible."
        (emacspeak-auditory-icon 'select-object)))))
 
 ;;}}}
+;;{{{ speak when moving to beginning and end of line
+
+(defcustom emacspeak-speak-at-ends-of-line 'line
+  "Current text unit under point to speak when moving to the beginning or end of a line.  Default is `line'."
+  :group 'emacspeak-advice
+  :type '(choice
+          (const :tag "nothing" nil)
+          (const :tag "line" line)
+          (const :tag "word" word)
+          (const :tag "character" char)))
+
+(cl-loop
+ for f in
+ '(beginning-of-line end-of-line
+                     move-beginning-of-line move-end-of-line back-to-indentation)
+ do
+ (eval
+  `(defadvice ,f (after emacspeak pre act comp)
+     "Speak `emacspeak-speak-at-ends-of-line' under point."
+     (when (and (ems-interactive-p) (not (eq emacspeak-speak-at-ends-of-line 'nil)))
+       (and dtk-stop-immediately (dtk-stop))
+       (cond
+         ((eq emacspeak-speak-at-ends-of-line 'line) (emacspeak-speak-line))
+         ((eq emacspeak-speak-at-ends-of-line 'word) (emacspeak-speak-word))
+         ((eq emacspeak-speak-at-ends-of-line 'char) (emacspeak-speak-char t)))
+       (emacspeak-auditory-icon 'select-object)))))
+
+;;}}} 
 ;;{{{ yanking and popping
 
 (cl-loop

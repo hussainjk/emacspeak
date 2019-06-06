@@ -1019,18 +1019,18 @@ with auditory icon `more'.  These can then be spoken using command
     (cond
 ;;; C1..C5
      ((string-equal "" line)
-      (dtk-tone 130.8 150 'force))
+      (when emacspeak-use-auditory-icons (dtk-tone 130.8 150 'force)))
      ((string-match emacspeak-speak-blank-line-regexp line) ;only white space
-      (dtk-tone 261.6 150 'force))
+      (when emacspeak-use-auditory-icons (dtk-tone 261.6 150 'force)))
      ((and (not (eq 'all dtk-punctuation-mode))
            (string-match emacspeak-horizontal-rule line))
-      (dtk-tone 523.3 150 t))
+      (when emacspeak-use-auditory-icons (dtk-tone 523.3 150 t)))
      ((and (not (eq 'all dtk-punctuation-mode))
            (string-match emacspeak-decoration-rule line))
-      (dtk-tone 1047 150 t))
+      (when emacspeak-use-auditory-icons (dtk-tone 1047 150 t)))
      ((and (not (eq 'all dtk-punctuation-mode))
            (string-match emacspeak-unspeakable-rule line))
-      (dtk-tone 2093 150 t))
+      (when emacspeak-use-auditory-icons (dtk-tone 2093 150 t)))
      (t
       (let*
           ((l (length line))

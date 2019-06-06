@@ -206,6 +206,26 @@ proc tts_set_speech_rate {rate} {
     return ""
 }
 
+proc tts_set_speech_pitch {pitch} {
+    global tts
+
+    set factor $tts(char_factor) 
+    set tts(speech_pitch) $pitch
+    setPitch 0 $pitch
+    service
+    return ""
+}
+
+proc tts_set_speech_pitch_range {pitch_range} {
+    global tts
+
+    set factor $tts(char_factor) 
+    set tts(speech_pitch_range) $pitch_range
+    setPitchRange 0 $pitch_range
+    service
+    return ""
+}
+
 proc tts_set_character_scale {factor} {
     global tts
 
